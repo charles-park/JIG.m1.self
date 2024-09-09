@@ -1,0 +1,3 @@
+[submodule "lib_fbui"]
+	path = lib_fbui
+	url = https://github.com/charles-park/lib_fbui
