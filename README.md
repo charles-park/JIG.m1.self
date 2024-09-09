@@ -2,7 +2,7 @@
 ODROID-M1(RK3568) Self-test jig source (m1-server upgrade version, New spi-flash support)
 
 ### Documentation for JIG development
-* Document : https://docs.google.com/spreadsheets/d/14jsR5Y7Cq3gO_OViS7bzTr-GcHdNRS_1258eUWI2aqs/edit#gid=1673179576
+* Document : https://docs.google.com/spreadsheets/d/18J4B4bqgUbMBA8XeoDkMcKPVEAeNCP2jQm5TOlgKUAo/edit?gid=1741005235#gid=1741005235
 
 ### Image used for testing.
 * https://dn.odroid.com/RK3568/ODROID-M1/Ubuntu/ubuntu-20.04-server-odroidm1-20220531.img.xz
@@ -17,7 +17,7 @@ ODROID-M1(RK3568) Self-test jig source (m1-server upgrade version, New spi-flash
 ```
 root@server:~# vi /boot/petitboot.cfg
 [petitboot]
-petitboot,timeout=1
+petitboot,timeout=0
 ```
 
 ### Self mode settings
