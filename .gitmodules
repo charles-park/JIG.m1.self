@@ -1,3 +1,18 @@
 [submodule "lib_fbui"]
 	path = lib_fbui
 	url = https://github.com/charles-park/lib_fbui
+[submodule "lib_efuse"]
+	path = lib_efuse
+	url = https://github.com/charles-park/lib_efuse
+[submodule "lib_gpio"]
+	path = lib_gpio
+	url = https://github.com/charles-park/lib_gpio
+[submodule "lib_i2cadc"]
+	path = lib_i2cadc
+	url = https://github.com/charles-park/lib_i2cadc
+[submodule "lib_mac"]
+	path = lib_mac
+	url = https://github.com/charles-park/lib_mac
+[submodule "nlp_server_ctrl"]
+	path = nlp_server_ctrl
+	url = https://github.com/charles-park/nlp_server_ctrl
