@@ -32,7 +32,7 @@ enum {
 // function prototype
 //------------------------------------------------------------------------------
 extern int header_pattern_set   (int id);
-extern int header_pattern_check (int id, int *pattern40, int *pattern14);
+extern int header_pattern_check (int id, int *pattern40);
 extern int header_init          (void);
 
 //------------------------------------------------------------------------------

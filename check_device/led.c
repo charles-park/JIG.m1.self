@@ -54,9 +54,9 @@ struct device_led {
 //------------------------------------------------------------------------------
 struct device_led DeviceLED [eLED_END] = {
     // eLED_POWER
-    { "/sys/class/leds/red/brightness", "0", "255" },
+    { "/sys/class/leds/power/brightness", "0", "255" },
     // eLED_ALIVE
-    { "/sys/class/leds/blue/brightness" , "255", "0" },
+    { "/sys/class/leds/work/brightness" , "255", "0" },
 };
 
 const char *ALIVE_TRIGGER = "/sys/class/leds/blue/trigger";

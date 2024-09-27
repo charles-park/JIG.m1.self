@@ -21,6 +21,7 @@
 // Define the Device ID for the AUDIO group.
 //------------------------------------------------------------------------------
 enum {
+    eAUDIO_NONE,
     eAUDIO_LEFT,
     eAUDIO_RIGHT,
     eAUDIO_END

@@ -52,9 +52,9 @@ struct device_adc {
 //------------------------------------------------------------------------------
 struct device_adc DeviceADC [eADC_END] = {
     // eADC_H37 (Header 37) - const 1.358V
-    { "/sys/bus/iio/devices/iio:device0/in_voltage4_raw", DEFAULT_ADC_H37_H, DEFAULT_ADC_H37_L, 0 },
+    { "/sys/bus/iio/devices/iio:device0/in_voltage7_raw", DEFAULT_ADC_H37_H, DEFAULT_ADC_H37_L, 0 },
     // eADC_H40 (Header 40) - const 0.441V
-    { "/sys/bus/iio/devices/iio:device0/in_voltage5_raw", DEFAULT_ADC_H40_H, DEFAULT_ADC_H40_L, 0 },
+    { "/sys/bus/iio/devices/iio:device0/in_voltage6_raw", DEFAULT_ADC_H40_H, DEFAULT_ADC_H40_L, 0 },
 };
 
 //------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ static int adc_read (const char *path)
         fgets (rdata, sizeof(rdata), fp);
         fclose(fp);
     }
-    mV = (atoi(rdata) * 1800) / 4096;
+    mV = (atoi(rdata) * 1800) / 1024;
     return mV;
 }
 

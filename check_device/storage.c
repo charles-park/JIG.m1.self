@@ -55,10 +55,10 @@ struct device_storage {
 #define DEFAULT_uSD_R   50
 #define DEFAULT_uSD_W   20
 
-#define DEFAULT_SATA_R  250
+#define DEFAULT_SATA_R  350
 #define DEFAULT_SATA_W  150
 
-#define DEFAULT_NVME_R  250
+#define DEFAULT_NVME_R  700
 #define DEFAULT_NVME_W  150
 
 //------------------------------------------------------------------------------
@@ -79,13 +79,14 @@ struct device_storage DeviceSTORAGE [eSTORAGE_END] = {
     // eSTORAGE_uSD (boot device : /root)
     { "/dev/mmcblk1",  DEFAULT_uSD_R,  DEFAULT_uSD_R,   0 },
     // eSTORAGE_SATA
-    {            " ", DEFAULT_SATA_R, DEFAULT_SATA_R,   0 },
+    { "/dev/sda"    , DEFAULT_SATA_R, DEFAULT_SATA_R,   0 },
     // eSTORAGE_NVME
     { "/dev/nvme0n1", DEFAULT_NVME_R, DEFAULT_NVME_R,   0 },
 };
 
 // Storage Read / Write (16 Mbytes, 1 block count)
-#define STORAGE_R_CHECK "dd of=/dev/null bs=16M count=1 iflag=nocache,dsync oflag=nocache,dsync if="
+//#define STORAGE_R_CHECK "dd of=/dev/null bs=16M count=1 iflag=nocache,dsync oflag=nocache,dsync if="
+#define STORAGE_R_CHECK "dd of=/dev/null bs=16M count=1 iflag=direct,dsync oflag=nocache,dsync if="
 #define STORAGE_W_CHECK "dd if=/dev/zero bs=16M count=1 iflag=nocache,dsync oflag=nocache,dsync of="
 
 //------------------------------------------------------------------------------
@@ -108,7 +109,7 @@ static int remove_tmp (const char *path)
 }
 
 //------------------------------------------------------------------------------
-static int storage_rw (const char *path, const char *check_cmd)
+static int _storage_rw (const char *path, const char *check_cmd)
 {
     FILE *fp;
     char cmd[STR_PATH_LENGTH], rdata[STR_PATH_LENGTH], *ptr;
@@ -131,28 +132,35 @@ static int storage_rw (const char *path, const char *check_cmd)
 //------------------------------------------------------------------------------
 int storage_check (int id)
 {
-    int value = 0;
-
     if ((id >= eSTORAGE_END) || (access (DeviceSTORAGE[id].path, R_OK) != 0)) {
         return 0;
     }
+    return 1;
+}
 
-    switch (id) {
-        case eSTORAGE_eMMC_W:   case eSTORAGE_uSD_W:
-        case eSTORAGE_NVME_W:   case eSTORAGE_SATA_W:
-            if (id == BOOT_DEVICE) {
-                value = storage_rw (TEMP_FILE, STORAGE_W_CHECK);
-                remove_tmp (TEMP_FILE);
-            }
-            return value;
-        default :
-            break;
+//------------------------------------------------------------------------------
+int storage_rw (int id)
+{
+    int value = 0;
 
+    if (storage_check(id)) {
+        sleep(1);
+        switch (id) {
+            case eSTORAGE_eMMC_W:   case eSTORAGE_uSD_W:
+            case eSTORAGE_NVME_W:   case eSTORAGE_SATA_W:
+                if (id == BOOT_DEVICE) {
+                    value = _storage_rw (TEMP_FILE, STORAGE_W_CHECK);
+                    remove_tmp (TEMP_FILE);
+                }
+                return value;
+            default :
+                break;
+
+        }
+        value = _storage_rw (DeviceSTORAGE[id].path, STORAGE_R_CHECK);
     }
-    value = storage_rw (DeviceSTORAGE[id].path, STORAGE_R_CHECK);
 
     return (value > DeviceSTORAGE[id].w_min) ? value : 0;
 }
-
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------

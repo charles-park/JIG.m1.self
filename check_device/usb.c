@@ -58,15 +58,17 @@ struct device_usb {
 struct device_usb DeviceUSB [eUSB_END] = {
     // path, r_min(MB/s), w_min(MB/s), link, read
     // eUSB_30, USB 3.0
+    { "/sys/bus/usb/devices/8-1", DEFAULT_USB30_R, DEFAULT_USB30_W, DEFAULT_USB30_L, 0 },
     { "/sys/bus/usb/devices/6-1", DEFAULT_USB30_R, DEFAULT_USB30_W, DEFAULT_USB30_L, 0 },
     // eUSB_20, USB 2.0
     { "/sys/bus/usb/devices/1-1", DEFAULT_USB20_R, DEFAULT_USB20_W, DEFAULT_USB20_L, 0 },
+    { "/sys/bus/usb/devices/2-1", DEFAULT_USB20_R, DEFAULT_USB20_W, DEFAULT_USB20_L, 0 },
     // eUSB_C, USB 3.0
-    { "/sys/bus/usb/devices/9-1", DEFAULT_USB30_R, DEFAULT_USB30_W, DEFAULT_USB30_L, 0 },
 };
 
 // USB Read / Write (16 Mbytes, 1 block count)
-#define USB_R_CHECK "dd of=/dev/null bs=16M count=1 iflag=nocache,dsync oflag=nocache,dsync if=/dev/"
+//#define USB_R_CHECK "dd of=/dev/null bs=16M count=1 iflag=nocache,dsync oflag=nocache,dsync if=/dev/"
+#define USB_R_CHECK "dd of=/dev/null bs=16M count=1 iflag=direct,dsync oflag=nocache,dsync if=/dev/"
 #define USB_W_CHECK "dd if=/dev/zero bs=16M count=1 iflag=nocache,dsync oflag=nocache,dsync of=/dev/"
 
 //------------------------------------------------------------------------------
@@ -90,7 +92,7 @@ static int usb_speed (const char *path)
 }
 
 //------------------------------------------------------------------------------
-static int usb_rw (const char *path, const char *check_cmd)
+static int _usb_rw (const char *path, const char *check_cmd)
 {
     FILE *fp;
     char cmd[STR_PATH_LENGTH], rdata[STR_PATH_LENGTH], *ptr;
@@ -130,23 +132,33 @@ static int usb_rw (const char *path, const char *check_cmd)
 //------------------------------------------------------------------------------
 int usb_check (int id)
 {
-    int value = 0;
-
-    if ((id >= eUSB_END) || ((access (DeviceUSB[id].path, R_OK)) != 0)) {
+    if ((id >= eUSB_END) || ((access (DeviceUSB[id].path, R_OK)) != 0))
         return 0;
-    }
 
     if (usb_speed (DeviceUSB[id].path) != DeviceUSB[id].speed)
         return 0;
 
-    switch (id) {
-        case eUSB_30_W: case eUSB_20_W: case eUSB_C_W:
-            value = usb_rw (DeviceUSB[id].path, USB_W_CHECK);
-            return (value > DeviceUSB[id].w_min) ? value : 0;
-        default :
-            value = usb_rw (DeviceUSB[id].path, USB_R_CHECK);
-            return (value > DeviceUSB[id].r_min) ? value : 1;
+    return 1;
+}
+
+//------------------------------------------------------------------------------
+int usb_rw (int id)
+{
+    int value = 0;
+
+    if (usb_check(id)) {
+        sleep(1);
+        switch (id) {
+            case eUSB30_UP_W:   case eUSB30_DN_W:
+            case eUSB20_UP_W:   case eUSB20_DN_W:
+                value = _usb_rw (DeviceUSB[id].path, USB_W_CHECK);
+                return (value > DeviceUSB[id].w_min) ? value : 0;
+            default :
+                value = _usb_rw (DeviceUSB[id].path, USB_R_CHECK);
+                return (value > DeviceUSB[id].r_min) ? value : 0;
+        }
     }
+    return 0;
 }
 
 //------------------------------------------------------------------------------
