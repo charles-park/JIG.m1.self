@@ -24,10 +24,6 @@ petitboot,timeout=0
 ### Self mode settings
 * Install ubuntu package & python3 module
 ```
-// odroid server repo add
-root@server:~# echo "192.168.0.224 ppa.linuxfactory.or.kr" >> /etc/hosts
-root@server:~# echo "deb  http://ppa.linuxfactory.or.kr focal internal" >> /etc/apt/sources.list.d/ppa-linuxfactory-or-kr.list
-
 // ubuntu system update
 root@server:~# apt update --fix-missing
 root@server:~# apt update && apt upgrade -y
