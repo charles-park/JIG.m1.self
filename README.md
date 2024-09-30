@@ -171,10 +171,14 @@ Simple mixer control 'Capture MIC Path',0
 ```
 * Sound test (Sign-wave 1Khz)
 ```
-// use speaker-test
-root@server:~# speaker-test -D hw:0,0 -c 2 -t sine -f 1000           # pin header target, all
-root@server:~# speaker-test -D hw:0,0 -c 2 -t sine -f 1000 -p 1 -s 1 # pin header target, left
-root@server:~# speaker-test -D hw:0,0 -c 2 -t sine -f 1000 -p 1 -s 2 # pin header target, right
+// use speaker-test(sign-wave)
+root@server:~# speaker-test -D hw:1,0 -c 2 -t sine -f 1000           # pin header target, all
+root@server:~# speaker-test -D hw:1,0 -c 2 -t sine -f 1000 -p 1 -s 1 # pin header target, left
+root@server:~# speaker-test -D hw:1,0 -c 2 -t sine -f 1000 -p 1 -s 2 # pin header target, right
+
+// use speaker-test(left/right wav file)
+root@server:~# speaker-test -D hw:1,0 -c 2 -t wav -s1
+root@server:~# speaker-test -D hw:1,0 -c 2 -t wav -s2
 
 // or use aplay with (1Khz audio file)
 root@server:~# aplay -Dhw:1,0 {audio file} -d {play time}
