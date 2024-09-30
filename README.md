@@ -83,8 +83,9 @@ root@odroid:~# git clone https://github.com/charles-park/JIG.m1.self
 root@odroid:~# cd JIG.m1.self
 root@odroid:~/JIG.m1.self# git submodule update --init --recursive
 
-// app build and all package install
-root@odroid:~/JIG.m1.self# ./install
+// odroid-jig.service install
+root@odroid:~/JIG.m1.self# cd service
+root@odroid:~/JIG.m1.self/service# ./install
 
 ```
 
