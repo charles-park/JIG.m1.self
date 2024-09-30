@@ -6,7 +6,7 @@ ODROID-M1(RK3568) Self-test jig source (m1-server upgrade version, New spi-flash
 
 ### Image used for testing.
 * odroidh3/생산관리/jig/odroid-m1.new/uboot-include-ubuntu-odroid-m1.img (mmcblk3 resize확인. firstboot.sh)
-* odroidh3/생산관리/jig/odroid-m1.new/spiupdate_odroidm1_20240529.img
+* odroidh3/생산관리/jig/odroid-m1.new/spiupdate_odroidm1_20240529.img (support new spi-flash.XT25Q128D)
 
 ### Update Image info (apt update && apt upgrade -y)
  * U-Boot : U-Boot 2017.09 (May 28 2024 - 10:23:38 +0000)
