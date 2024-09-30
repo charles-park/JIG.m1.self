@@ -587,6 +587,7 @@ int get_efuse_mac (char *mac_str)
         if (fgets (cmd_line, sizeof(cmd_line), fp) != NULL) {
             char *ptr;
             int i;
+            tolowerstr (cmd_line);
             if ((ptr = strstr(cmd_line, "001e06")) != NULL) {
                 for (i = 0; i < 12; i++)
                     mac_str[i] = *(ptr + i);
