@@ -442,7 +442,7 @@ void *check_device_ir (void *arg)
     m1_item[eITEM_IR].status = eSTATUS_RUN;
     ui_set_ritem (p->pfb, p->pui, m1_item[eITEM_IR].ui_id, RUN_BOX_ON, -1);
 
-    while (TimeoutStop) {
+    while (1) {
         // recive time out config
         // Set 1ms timeout counter
         timeout.tv_sec  = 0;
@@ -1185,18 +1185,17 @@ int main (void)
         check_device_system (&client);
         check_device_adc    (&client);
         check_header        (&client);
-//        check_device_audio  (&client);
         usleep (APP_LOOP_DELAY * 1000);
 
         if (EventIR != eEVENT_NONE) {
             switch (EventIR) {
                 case eEVENT_ETH_GLED:
                 case eEVENT_ETH_OLED:
-                    check_device_ethernet (&client);
+                    if (TimeoutStop)    check_device_ethernet (&client);
                     break;
                 case eEVENT_HP_L:
                 case eEVENT_HP_R:
-                    check_device_audio (&client);
+                    if (TimeoutStop)    check_device_audio (&client);
                     break;
                 case eEVENT_MAC_PRINT:
                     if (m1_item [eITEM_MAC_ADDR].result)
