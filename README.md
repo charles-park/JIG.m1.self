@@ -123,8 +123,8 @@ root@server:~# smbpasswd -a root
 root@server:~# vi /etc/samba/smb.conf
 ```
 ```
-[odroidm2-self]
-   comment = odroid-m1s jig root
+[odroidm1-self]
+   comment = odroid-m1 jig root
    path = /root
    guest ok = no
    browseable = yes
