@@ -416,6 +416,7 @@ enum {
     eEVENT_HP_R,
     eEVENT_MAC_PRINT,
     eEVENT_STOP,
+    eEVENT_ENTER,
     eEVENT_END
 };
 
@@ -487,6 +488,9 @@ void *check_device_ir (void *arg)
                             case    KEY_RIGHT:
                                 EventIR = eEVENT_HP_R;
                                 break;
+                            case    KEY_ENTER:
+                                EventIR = eEVENT_ENTER;
+                                break;
                             default :
                                 EventIR = eEVENT_NONE;
                                 break;
@@ -503,8 +507,6 @@ void *check_device_ir (void *arg)
 }
 
 //------------------------------------------------------------------------------
-static int check_device_audio (client_t *p);
-
 static int JackStatus = 0;
 
 void *check_hp_detect (void *arg);
@@ -1131,7 +1133,7 @@ static int check_device_audio (client_t *p)
 //------------------------------------------------------------------------------
 static int client_setup (client_t *p)
 {
-    pthread_t thread_hp_detect, thread_check_status, thread_ethernet;
+    pthread_t thread_hp_detect, thread_check_status;
     pthread_t thread_usb, thread_storage, thread_ir;
 
     if ((p->pfb = fb_init (DEVICE_FB)) == NULL)         exit(1);
@@ -1195,7 +1197,7 @@ int main (void)
                     break;
                 case eEVENT_HP_L:
                 case eEVENT_HP_R:
-                    if (TimeoutStop)    check_device_audio (&client);
+                    check_device_audio (&client);
                     break;
                 case eEVENT_MAC_PRINT:
                     if (m1_item [eITEM_MAC_ADDR].result)
@@ -1203,6 +1205,10 @@ int main (void)
                     break;
                 case eEVENT_STOP:
                     TimeoutStop = 0;
+                    break;
+                case eEVENT_ENTER:
+                    if (!m1_item [eITEM_IPERF].result)
+                        check_iperf_speed (&client);
                     break;
                 default :
                     break;
