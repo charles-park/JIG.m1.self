@@ -398,6 +398,9 @@ void *check_status (void *arg)
         usleep (APP_LOOP_DELAY * 1000);
         onoff = !onoff;
 
+        led_set_status (eLED_POWER, onoff);
+        led_set_status (eLED_ALIVE, onoff);
+
         if (onoff)
             ui_set_ritem (p->pfb, p->pui, eUI_STATUS, err ? COLOR_RED : COLOR_GREEN, -1);
         else
@@ -526,9 +529,8 @@ void *check_hp_detect (void *arg)
         printf ("%s : /dev/input/event2 open error!\n", __func__);
         return arg;
     }
-    printf("%s fd = %d\n", __func__, fd);
 
-    while (TimeoutStop) {
+    while (1) {
         // recive time out config
         // Set 1ms timeout counter
         timeout.tv_sec  = 0;
@@ -704,7 +706,7 @@ void *check_device_usb (void *arg)
     ui_set_ritem (p->pfb, p->pui, m1_item[eITEM_USB20_UP].ui_id, RUN_BOX_ON, -1);
     ui_set_ritem (p->pfb, p->pui, m1_item[eITEM_USB20_DN].ui_id, RUN_BOX_ON, -1);
 
-    while (TimeoutStop) {
+    while (1) {
         // USB30
         if (!m1_item[eITEM_USB30_UP].result && usb_check (eUSB30_UP_R)) {
             m1_item[eITEM_USB30_UP].status = eSTATUS_RUN;
@@ -857,7 +859,6 @@ static int check_device_system (client_t *p)
     char str[20];
 
     // MEM
-//    if (!m1_item[eITEM_MEM].result && TimeoutStop) {
     if (TimeoutStop) {
         m1_item[eITEM_MEM].status = eSTATUS_RUN;
         ui_set_ritem (p->pfb, p->pui, m1_item[eITEM_MEM].ui_id, COLOR_YELLOW, -1);
@@ -1043,28 +1044,28 @@ static int check_i2cadc (client_t *p)
     // ADC Board Check
     int value = 0, cnt = 1;
 
-    if (p->adc_fd == 0 )    p->adc_fd = adc_board_init (I2C_ADC_DEV);
+    p->adc_fd = adc_board_init (I2C_ADC_DEV);
 
-    if (p->adc_fd != 0 ) {
-        // DC Jack 12V ~ 19V Check (2.4V ~ 3.8V)
-        adc_board_read (p->adc_fd, "P13.2", &value, &cnt);
-        if (value > 2000) {
-            adc_board_read (p->adc_fd, "P3.2", &value, &cnt);
-            p->channel = (value > 4000) ? NLP_SERVER_CHANNEL_RIGHT : NLP_SERVER_CHANNEL_LEFT;
+    if (p->adc_fd == 0 || p->adc_fd == -1)  return 0;
 
-            p->test_model = TEST_MODEL_NONE;
-            // Test Model 8GB
-            adc_board_read (p->adc_fd, "P3.8", &value, &cnt);
-            if (value > 4000)
-                p->test_model = TEST_MODEL_4GB;
+    // DC Jack 12V ~ 19V Check (2.4V ~ 3.8V)
+    adc_board_read (p->adc_fd, "P13.2", &value, &cnt);
+    if (value > 2000) {
+        adc_board_read (p->adc_fd, "P3.2", &value, &cnt);
+        p->channel = (value > 4000) ? NLP_SERVER_CHANNEL_RIGHT : NLP_SERVER_CHANNEL_LEFT;
 
-            // Test Model 16GB
-            adc_board_read (p->adc_fd, "P3.9", &value, &cnt);
-            if (value > 4000)
-                p->test_model = TEST_MODEL_8GB;
+        p->test_model = TEST_MODEL_NONE;
+        // Test Model 8GB
+        adc_board_read (p->adc_fd, "P3.8", &value, &cnt);
+        if (value > 4000)
+            p->test_model = TEST_MODEL_4GB;
 
-            return 1;
-        }
+        // Test Model 16GB
+        adc_board_read (p->adc_fd, "P3.9", &value, &cnt);
+        if (value > 4000)
+            p->test_model = TEST_MODEL_8GB;
+
+        return 1;
     }
     return 0;
 }
@@ -1176,7 +1177,7 @@ int main (void)
     // UI
     client_setup (&client);
 
-    while (!check_i2cadc(&client))  usleep (APP_LOOP_DELAY * 1000);
+    while (!check_i2cadc(&client))  sleep (1);
     check_device_system (&client);
 
     pthread_create (&thread_spibt, NULL, check_spibt, &client);
@@ -1193,7 +1194,7 @@ int main (void)
             switch (EventIR) {
                 case eEVENT_ETH_GLED:
                 case eEVENT_ETH_OLED:
-                    if (TimeoutStop)    check_device_ethernet (&client);
+                    check_device_ethernet (&client);
                     break;
                 case eEVENT_HP_L:
                 case eEVENT_HP_R:
