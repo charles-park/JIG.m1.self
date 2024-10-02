@@ -510,8 +510,6 @@ void *check_status (void *arg)
         else
             ui_set_ritem (p->pfb, p->pui, eUI_STATUS, p->pui->bc.uint, -1);
         ui_update    (p->pfb, p->pui, -1);
-
-        if (EventIR == eEVENT_BACK) break;
     }
     return arg;
 }
@@ -1216,10 +1214,10 @@ int main (void)
                         check_iperf_speed (&client);
                     break;
                 case eEVENT_BACK:
-                    sleep (1);
+                    printf ("Program restart!!\n"); fflush(stdout);
+
                     fb_clear  (client.pfb);
                     draw_text (client.pfb, 1920/4, 1080/2, COLOR_RED, COLOR_BLACK, 5, "- APPLICATION RESTART -");
-                    printf ("Program restart!!\n"); fflush(stdout);
                     return 0;
                 default :
                     break;
