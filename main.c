@@ -271,6 +271,10 @@ struct check_item m1_item [eITEM_END] = {
 };
 
 //------------------------------------------------------------------------------
+#define	RUN_BOX_ON	RGB_TO_UINT(204, 204, 0)
+#define	RUN_BOX_OFF	RGB_TO_UINT(153, 153, 0)
+
+//------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 // 문자열 변경 함수. 입력 포인터는 반드시 메모리가 할당되어진 변수여야 함.
 //------------------------------------------------------------------------------
@@ -323,9 +327,109 @@ int errcode_print (client_t *p)
 }
 
 //------------------------------------------------------------------------------
-#define	RUN_BOX_ON	RGB_TO_UINT(204, 204, 0)
-#define	RUN_BOX_OFF	RGB_TO_UINT(153, 153, 0)
+enum {
+    eEVENT_NONE,
+    eEVENT_ETH_GLED,
+    eEVENT_ETH_OLED,
+    eEVENT_HP_L,
+    eEVENT_HP_R,
+    eEVENT_MAC_PRINT,
+    eEVENT_STOP,
+    eEVENT_ENTER,
+    eEVENT_BACK,
+    eEVENT_END
+};
 
+static int EventIR = eEVENT_NONE;
+
+void *check_device_ir (void *arg);
+void *check_device_ir (void *arg)
+{
+    client_t *p = (client_t *)arg;
+
+    struct input_event event;
+    struct timeval  timeout;
+    fd_set readFds;
+    static int fd = -1;
+
+    // IR Device Name
+    // /sys/class/input/event0/device/name -> fdd70030.pwm
+    if ((fd = open("/dev/input/event0", O_RDONLY)) < 0) {
+        printf ("%s : /dev/input/event0 open error!\n", __func__);
+        return arg;
+    }
+    printf("%s fd = %d\n", __func__, fd);
+
+    m1_item[eITEM_IR].status = eSTATUS_RUN;
+    ui_set_ritem (p->pfb, p->pui, m1_item[eITEM_IR].ui_id, RUN_BOX_ON, -1);
+
+    while (1) {
+        // recive time out config
+        // Set 1ms timeout counter
+        timeout.tv_sec  = 0;
+        // timeout.tv_usec = timeout_ms*1000;
+        timeout.tv_usec = 100000;
+
+        FD_ZERO(&readFds);
+        FD_SET(fd, &readFds);
+        select(fd+1, &readFds, NULL, NULL, &timeout);
+
+        if(FD_ISSET(fd, &readFds))
+        {
+            if(fd && read(fd, &event, sizeof(struct input_event))) {
+
+                switch (event.type) {
+                    case    EV_SYN:
+                        break;
+                    case    EV_KEY:
+                        ui_set_sitem (p->pfb, p->pui, m1_item[eITEM_IR].ui_id, -1, -1, "PASS");
+                        ui_set_ritem (p->pfb, p->pui, m1_item[eITEM_IR].ui_id, COLOR_GREEN, -1);
+                        m1_item[eITEM_IR].result = eRESULT_PASS;
+                        m1_item[eITEM_IR].status = eSTATUS_STOP;
+
+                        switch (event.code) {
+                            /* emergency stop */
+                            case    KEY_HOME:
+                                printf ("%s : EmergencyStop!!\n", __func__);
+                                EventIR = eEVENT_STOP;
+                                break;
+                            case    KEY_VOLUMEDOWN:
+                                EventIR = eEVENT_ETH_GLED;
+                                break;
+                            case    KEY_VOLUMEUP:
+                                EventIR = eEVENT_ETH_OLED;
+                                break;
+                            case    KEY_MENU:
+                                EventIR = eEVENT_MAC_PRINT;
+                                break;
+                            case    KEY_LEFT:
+                                EventIR = eEVENT_HP_L;
+                                break;
+                            case    KEY_RIGHT:
+                                EventIR = eEVENT_HP_R;
+                                break;
+                            case    KEY_ENTER:
+                                EventIR = eEVENT_ENTER;
+                                break;
+                            case    KEY_BACK:
+                                EventIR = eEVENT_BACK;
+                                break;
+                            default :
+                                EventIR = eEVENT_NONE;
+                                break;
+                        }
+                        break;
+                    default :
+                        printf("unknown event\n");
+                        break;
+                }
+            }
+        }
+    }
+    return arg;
+}
+
+//------------------------------------------------------------------------------
 void *check_status (void *arg);
 void *check_status (void *arg)
 {
@@ -406,105 +510,8 @@ void *check_status (void *arg)
         else
             ui_set_ritem (p->pfb, p->pui, eUI_STATUS, p->pui->bc.uint, -1);
         ui_update    (p->pfb, p->pui, -1);
-    }
-    return arg;
-}
 
-//------------------------------------------------------------------------------
-enum {
-    eEVENT_NONE,
-    eEVENT_ETH_GLED,
-    eEVENT_ETH_OLED,
-    eEVENT_HP_L,
-    eEVENT_HP_R,
-    eEVENT_MAC_PRINT,
-    eEVENT_STOP,
-    eEVENT_ENTER,
-    eEVENT_END
-};
-
-static int EventIR = eEVENT_NONE;
-
-void *check_device_ir (void *arg);
-void *check_device_ir (void *arg)
-{
-    client_t *p = (client_t *)arg;
-
-    struct input_event event;
-    struct timeval  timeout;
-    fd_set readFds;
-    static int fd = -1;
-
-    // IR Device Name
-    // /sys/class/input/event0/device/name -> fdd70030.pwm
-    if ((fd = open("/dev/input/event0", O_RDONLY)) < 0) {
-        printf ("%s : /dev/input/event0 open error!\n", __func__);
-        return arg;
-    }
-    printf("%s fd = %d\n", __func__, fd);
-
-    m1_item[eITEM_IR].status = eSTATUS_RUN;
-    ui_set_ritem (p->pfb, p->pui, m1_item[eITEM_IR].ui_id, RUN_BOX_ON, -1);
-
-    while (1) {
-        // recive time out config
-        // Set 1ms timeout counter
-        timeout.tv_sec  = 0;
-        // timeout.tv_usec = timeout_ms*1000;
-        timeout.tv_usec = 100000;
-
-        FD_ZERO(&readFds);
-        FD_SET(fd, &readFds);
-        select(fd+1, &readFds, NULL, NULL, &timeout);
-
-        if(FD_ISSET(fd, &readFds))
-        {
-            if(fd && read(fd, &event, sizeof(struct input_event))) {
-
-                switch (event.type) {
-                    case    EV_SYN:
-                        break;
-                    case    EV_KEY:
-                        ui_set_sitem (p->pfb, p->pui, m1_item[eITEM_IR].ui_id, -1, -1, "PASS");
-                        ui_set_ritem (p->pfb, p->pui, m1_item[eITEM_IR].ui_id, COLOR_GREEN, -1);
-                        m1_item[eITEM_IR].result = eRESULT_PASS;
-                        m1_item[eITEM_IR].status = eSTATUS_STOP;
-
-                        switch (event.code) {
-                            /* emergency stop */
-                            case    KEY_HOME:
-                                printf ("%s : EmergencyStop!!\n", __func__);
-                                EventIR = eEVENT_STOP;
-                                break;
-                            case    KEY_VOLUMEDOWN:
-                                EventIR = eEVENT_ETH_GLED;
-                                break;
-                            case    KEY_VOLUMEUP:
-                                EventIR = eEVENT_ETH_OLED;
-                                break;
-                            case    KEY_MENU:
-                                EventIR = eEVENT_MAC_PRINT;
-                                break;
-                            case    KEY_LEFT:
-                                EventIR = eEVENT_HP_L;
-                                break;
-                            case    KEY_RIGHT:
-                                EventIR = eEVENT_HP_R;
-                                break;
-                            case    KEY_ENTER:
-                                EventIR = eEVENT_ENTER;
-                                break;
-                            default :
-                                EventIR = eEVENT_NONE;
-                                break;
-                        }
-                        break;
-                    default :
-                        printf("unknown event\n");
-                        break;
-                }
-            }
-        }
+        if (EventIR == eEVENT_BACK) break;
     }
     return arg;
 }
@@ -620,7 +627,7 @@ void *check_spibt (void *arg)
     m1_item[eITEM_SPIBT_DN].status = eSTATUS_RUN;
     ui_set_ritem (p->pfb, p->pui, m1_item[eITEM_SPIBT_UP].ui_id, RUN_BOX_ON, -1);
     ui_set_ritem (p->pfb, p->pui, m1_item[eITEM_SPIBT_DN].ui_id, RUN_BOX_ON, -1);
-    while (TimeoutStop) {
+    while (1) {
         if (m1_item[eITEM_SPIBT_UP].result != eRESULT_PASS) {
             if (status != get_efuse_mac(mac_str)) {
                 status = get_efuse_mac(mac_str);
@@ -639,9 +646,6 @@ void *check_spibt (void *arg)
                 m1_item[eITEM_SPIBT_DN].status = eSTATUS_STOP;
             }
         }
-        if ((m1_item[eITEM_SPIBT_UP].status == eSTATUS_STOP) &&
-            (m1_item[eITEM_SPIBT_DN].status == eSTATUS_STOP))   break;
-
         usleep (APP_LOOP_DELAY * 1000);
     }
     return arg;
@@ -775,7 +779,7 @@ static int check_header (client_t *p)
             m1_item[eITEM_HEADER_PT1 + i].status = eSTATUS_RUN;
             ui_set_ritem (p->pfb, p->pui, ui_id + i, COLOR_YELLOW, -1);
 
-            header_pattern_set (i); usleep (APP_LOOP_DELAY * 1000);
+            header_pattern_set (i); usleep (100 * 1000);
 
             memset (pattern40, 0, sizeof(pattern40));
             adc_board_read (p->adc_fd,  "CON1", &pattern40[1],  &cnt);
@@ -1211,6 +1215,12 @@ int main (void)
                     if (!m1_item [eITEM_IPERF].result)
                         check_iperf_speed (&client);
                     break;
+                case eEVENT_BACK:
+                    sleep (1);
+                    fb_clear  (client.pfb);
+                    draw_text (client.pfb, 1920/4, 1080/2, COLOR_RED, COLOR_BLACK, 5, "- APPLICATION RESTART -");
+                    printf ("Program restart!!\n"); fflush(stdout);
+                    return 0;
                 default :
                     break;
             }

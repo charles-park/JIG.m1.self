@@ -22,6 +22,14 @@ WorkingDirectory=/root/JIG.m1.self/
 ExecStart=/bin/bash ./service/odroid-jig.sh
 ExecStartPre=/bin/sleep 5
 
+# on-success의 경우 (Kill -2) 옵션으로 종료시 재시작 합니다.
+# on-failure의 경우 (kill -9) 옵션으로 종료시 재시작 합니다.
+# always 항상 재시작 합니다.
+Restart=on-success
+
+# 설정한 시간 뒤에 실행합니다.
+RestartSec=1s
+
 [Install]
 WantedBy=multi-user.target
 #WantedBy=default.target
