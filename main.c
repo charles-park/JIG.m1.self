@@ -1196,7 +1196,9 @@ int main (void)
             switch (EventIR) {
                 case eEVENT_ETH_GLED:
                 case eEVENT_ETH_OLED:
+                    client.eth_switch = 1;
                     check_device_ethernet (&client);
+                    client.eth_switch = 0;
                     break;
                 case eEVENT_HP_L:
                 case eEVENT_HP_R:
