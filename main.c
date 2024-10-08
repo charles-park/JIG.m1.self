@@ -483,12 +483,15 @@ void *check_status (void *arg)
         }
         printf ("stop_cnt = %d,%d\n", eITEM_END, stop_cnt);
     }
-    // ethernet switch thread check.
-    while (p->eth_switch)   usleep (APP_LOOP_DELAY * 1000);
 
     // display stop
     memset (str, 0, sizeof(str));   sprintf (str, "%s", "FINISH");
+
+    // ethernet switch disable
+    p->eth_switch = 0;  usleep (APP_LOOP_DELAY * 1000);
+
     ethernet_link_setup (LINK_SPEED_1G);
+
     // wait for network stable
     usleep (APP_LOOP_DELAY * 1000);
 
@@ -497,6 +500,9 @@ void *check_status (void *arg)
     ui_set_sitem (p->pfb, p->pui, eUI_STATUS, -1, -1, str);
     err = errcode_print (p);
     ui_set_ritem (p->pfb, p->pui, eUI_STATUS, err ? COLOR_RED : COLOR_GREEN, -1);
+
+    // ethernet switch enable
+    p->eth_switch = 1;  usleep (APP_LOOP_DELAY * 1000);
 
     while (1) {
         usleep (APP_LOOP_DELAY * 1000);
@@ -654,6 +660,9 @@ void *check_spibt (void *arg)
 int check_device_ethernet (client_t *p)
 {
     int speed;
+
+    // ethernet switch enable/disable check
+    if (!p->eth_switch)     return 0;
 
     speed = ethernet_link_check ();
 
@@ -1165,6 +1174,9 @@ static int client_setup (client_t *p)
     pthread_create (&thread_ir,         NULL, check_device_ir, p);
     pthread_create (&thread_usb,        NULL, check_device_usb, p);
 
+    // ethernet switch enable
+    p->eth_switch = 1;
+
     return 1;
 }
 
@@ -1196,9 +1208,7 @@ int main (void)
             switch (EventIR) {
                 case eEVENT_ETH_GLED:
                 case eEVENT_ETH_OLED:
-                    client.eth_switch = 1;
                     check_device_ethernet (&client);
-                    client.eth_switch = 0;
                     break;
                 case eEVENT_HP_L:
                 case eEVENT_HP_R:
