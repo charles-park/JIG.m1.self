@@ -1181,10 +1181,25 @@ static int client_setup (client_t *p)
 }
 
 //------------------------------------------------------------------------------
+void *check_popup (void *arg);
+void *check_popup (void *arg)
+{
+    client_t *p = (client_t *)arg;
+
+    while (1) {
+        if (p->pui->p_item.timeout) {
+            p->pui->p_item.timeout--;
+            ui_update_popup (p->pfb, p->pui);
+        }
+        sleep (1);
+    }
+}
+
+//------------------------------------------------------------------------------
 int main (void)
 {
     client_t client;
-    pthread_t thread_spibt;
+    pthread_t thread_spibt, thread_popup;
 
     memset (&client, 0, sizeof(client));
 
@@ -1195,6 +1210,7 @@ int main (void)
     check_device_system (&client);
 
     pthread_create (&thread_spibt, NULL, check_spibt, &client);
+    pthread_create (&thread_popup, NULL, check_popup, &client);
 
     while (1)   {
         // retry
@@ -1227,9 +1243,14 @@ int main (void)
                     break;
                 case eEVENT_BACK:
                     printf ("Program restart!!\n"); fflush(stdout);
-
-                    fb_clear  (client.pfb);
-                    draw_text (client.pfb, 1920/4, 1080/2, COLOR_RED, COLOR_BLACK, 5, "- APPLICATION RESTART -");
+                    #if 0
+                        extern int      ui_set_popup (fb_info_t *fb, ui_grp_t *ui_grp,
+                                                int w, int h, int lw,       /* box width, box height, box outline width */
+                                                int fc, int bc, int lc,     /* color : font, background, outline */
+                                                int fs, int ts, char *fmt, ...); /* font scale, display time(sec), msg format */
+                    #endif
+                    ui_set_popup (client.pfb, client.pui, client.pfb->w/2, client.pfb->h/2, 4,
+                                    COLOR_RED, COLOR_BLACK, COLOR_YELLOW, 7, 3, "APP Restart!!");
                     return 0;
                 default :
                     break;
@@ -1237,7 +1258,6 @@ int main (void)
             EventIR = eEVENT_NONE;
         }
     }
-
     return 0;
 }
 
