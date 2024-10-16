@@ -1117,27 +1117,53 @@ static int check_server (client_t *p)
 }
 
 //------------------------------------------------------------------------------
+static int audio_sine_wave (client_t *p, int ch)
+{
+    int value = 0, cnt = 0, loop, retry = 3;
+
+    adc_board_read (p->adc_fd, ch == eAUDIO_LEFT ? "P13.2" : "P13.3", &value, &cnt);
+
+    // default high
+    if (value < 3000)   return 0;
+
+    // Audio Busy check (0 : err, 1 : pass, 2 : busy)
+    while (audio_check (ch) == 2)   usleep (100 * 1000);
+
+    for (loop = 0; loop < retry; loop++) {
+        adc_board_read (p->adc_fd, ch == eAUDIO_LEFT ? "P13.2" : "P13.3", &value, &cnt);
+        if (value < 100)    return 1;
+        usleep (100 * 1000);
+    }
+    return 0;
+}
+
 static int check_device_audio (client_t *p)
 {
     if (!JackStatus)    return 0;
 
-    if (EventIR == eEVENT_HP_L) {
-        if (audio_check (eAUDIO_LEFT)) {
+    if (!m1_item [eITEM_AUDIO_LEFT].result) {
+        if (audio_sine_wave (p, eAUDIO_LEFT)) {
             m1_item [eITEM_AUDIO_LEFT].result = eRESULT_PASS;
             ui_set_sitem (p->pfb, p->pui, m1_item [eITEM_AUDIO_LEFT].ui_id, -1, -1, "PASS");
             ui_set_ritem (p->pfb, p->pui, m1_item [eITEM_AUDIO_LEFT].ui_id, COLOR_GREEN, -1);
-            m1_item [eITEM_AUDIO_LEFT].status = eSTATUS_STOP;
+        } else {
+            m1_item [eITEM_AUDIO_LEFT].result = eRESULT_FAIL;
+            ui_set_sitem (p->pfb, p->pui, m1_item [eITEM_AUDIO_LEFT].ui_id, -1, -1, "FAIL");
+            ui_set_ritem (p->pfb, p->pui, m1_item [eITEM_AUDIO_LEFT].ui_id, COLOR_RED, -1);
         }
-        else return 0;
+        m1_item [eITEM_AUDIO_LEFT].status = eSTATUS_STOP;
     }
-    if (EventIR == eEVENT_HP_R) {
-        if (audio_check (eAUDIO_RIGHT)) {
+    if (!m1_item [eITEM_AUDIO_RIGHT].result) {
+        if (audio_sine_wave (p, eAUDIO_RIGHT)) {
             m1_item [eITEM_AUDIO_RIGHT].result = eRESULT_PASS;
             ui_set_sitem (p->pfb, p->pui, m1_item [eITEM_AUDIO_RIGHT].ui_id, -1, -1, "PASS");
             ui_set_ritem (p->pfb, p->pui, m1_item [eITEM_AUDIO_RIGHT].ui_id, COLOR_GREEN, -1);
-            m1_item [eITEM_AUDIO_RIGHT].status = eSTATUS_STOP;
+        } else {
+            m1_item [eITEM_AUDIO_RIGHT].result = eRESULT_FAIL;
+            ui_set_sitem (p->pfb, p->pui, m1_item [eITEM_AUDIO_RIGHT].ui_id, -1, -1, "FAIL");
+            ui_set_ritem (p->pfb, p->pui, m1_item [eITEM_AUDIO_RIGHT].ui_id, COLOR_RED, -1);
         }
-        else return 0;
+        m1_item [eITEM_AUDIO_RIGHT].status = eSTATUS_STOP;
     }
     return 1;
 }
@@ -1191,7 +1217,7 @@ void *check_popup (void *arg)
             p->pui->p_item.timeout--;
             ui_update_popup (p->pfb, p->pui);
         }
-        sleep (1);
+        usleep (APP_LOOP_DELAY * 1000);
     }
 }
 
@@ -1218,6 +1244,7 @@ int main (void)
         check_device_system (&client);
         check_device_adc    (&client);
         check_header        (&client);
+        check_device_audio  (&client);
         usleep (APP_LOOP_DELAY * 1000);
 
         if (EventIR != eEVENT_NONE) {
@@ -1228,7 +1255,7 @@ int main (void)
                     break;
                 case eEVENT_HP_L:
                 case eEVENT_HP_R:
-                    check_device_audio (&client);
+                    //check_device_audio (&client);
                     break;
                 case eEVENT_MAC_PRINT:
                     if (m1_item [eITEM_MAC_ADDR].result)
