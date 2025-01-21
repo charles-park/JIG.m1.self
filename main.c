@@ -1101,7 +1101,12 @@ static int check_server (client_t *p)
         ui_set_ritem (p->pfb, p->pui, m1_item [eITEM_SERVER_IP].ui_id, COLOR_YELLOW, -1);
         if (nlp_server_find(ip_addr)) {
             memcpy (p->nlp_ip, ip_addr, IP_ADDR_SIZE);
-            ui_set_sitem (p->pfb, p->pui, m1_item [eITEM_SERVER_IP].ui_id, -1, -1, ip_addr);
+            {
+                char ip_port[32];
+                memset (ip_port, 0, sizeof(ip_port));
+                sprintf(ip_port, "%s(P9000)", ip_addr);
+                ui_set_sitem (p->pfb, p->pui, m1_item [eITEM_SERVER_IP].ui_id, -1, -1, ip_port);
+            }
             ui_set_ritem (p->pfb, p->pui, m1_item [eITEM_SERVER_IP].ui_id, p->pui->bc.uint, -1);
             m1_item [eITEM_SERVER_IP].result = eRESULT_PASS;
             m1_item [eITEM_SERVER_IP].status = eSTATUS_STOP;
