@@ -1082,6 +1082,9 @@ static int check_i2cadc (client_t *p)
 }
 
 //------------------------------------------------------------------------------
+#define M1_NLP_SERVER_PORT  9000
+#define M1_NLP_CONFIG       "/boot/nlp_server.cfg"
+
 static int check_server (client_t *p)
 {
     char ip_addr [IP_ADDR_SIZE];
@@ -1099,7 +1102,7 @@ static int check_server (client_t *p)
         memset (ip_addr, 0, sizeof(ip_addr));
 
         ui_set_ritem (p->pfb, p->pui, m1_item [eITEM_SERVER_IP].ui_id, COLOR_YELLOW, -1);
-        if (nlp_server_find(ip_addr)) {
+        if (nlp_server_find(M1_NLP_CONFIG, M1_NLP_SERVER_PORT, ip_addr)) {
             memcpy (p->nlp_ip, ip_addr, IP_ADDR_SIZE);
             {
                 char ip_port[32];
