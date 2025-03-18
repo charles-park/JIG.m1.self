@@ -438,9 +438,11 @@ void *check_status (void *arg)
     client_t *p = (client_t *)arg;
 
     while (TimeoutStop) {
+        onoff = !onoff;
         ui_set_ritem (p->pfb, p->pui, ALIVE_DISPLAY_UI_ID,
                     onoff ? COLOR_GREEN : p->pui->bc.uint, -1);
-        onoff = !onoff;
+	ui_set_sitem (p->pfb, p->pui, ALIVE_DISPLAY_UI_ID, -1, -1,
+		onoff ? p->pui->b_item[ALIVE_DISPLAY_UI_ID].s_dfl : __DATE__);
 
         if (m1_item[eITEM_SERVER_IP].result && TimeoutStop) {
             memset (str, 0, sizeof(str));
