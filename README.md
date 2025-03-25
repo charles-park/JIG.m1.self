@@ -203,7 +203,8 @@ root@odroid:~#
 overlayroot.conf 파일의 overlayroot=””를 overlayroot=”tmpfs”로 변경합니다.
 vi /etc/overlayroot.conf
 overlayroot_cfgdisk="disabled"
-overlayroot="tmpfs"
+# root partition only overlay fs (recurse=1 -> all partition)
+overlayroot="tmpfs:recurse=0"
 ```
 * overlay-root modified/disable  
 ```
