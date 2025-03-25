@@ -1061,9 +1061,9 @@ static int check_i2cadc (client_t *p)
 
     if (p->adc_fd == 0 || p->adc_fd == -1)  return 0;
 
-    // DC Jack 12V ~ 19V Check (2.4V ~ 3.8V)
-    adc_board_read (p->adc_fd, "P13.2", &value, &cnt);
-    if (value > 2000) {
+    // Header 5V check
+    adc_board_read (p->adc_fd, "con1.2", &value, &cnt);
+    if (value > 4000) {
         adc_board_read (p->adc_fd, "P3.2", &value, &cnt);
         p->channel = (value > 4000) ? NLP_SERVER_CHANNEL_RIGHT : NLP_SERVER_CHANNEL_LEFT;
 
